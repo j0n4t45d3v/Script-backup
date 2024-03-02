@@ -1,0 +1,40 @@
+#!/bin/sh
+
+arg=$1
+current_data=$(date '+%Y%m%d%H%M%S')
+name=$(basename $arg)
+dest_backup="$HOME/backup"
+dest_log="$HOME/backup/log"
+
+verify_if_returning_error(){
+  if [ $? -ne 0 ];then
+    echo "Erro; falha na geração do backup veja o log '$dest_log/$1' para saber o que deu erro."
+  fi
+}
+
+if [ ! -d "$dest_backup" ]; then
+  mkdir -p $dest_backup
+fi
+
+if [ ! -d "$dest_log" ]; then
+  mkdir -p $dest_log
+fi
+
+if [ -e "$arg" ]; then
+  sudo chattr +i $arg
+  if [ -f "$arg" ]; then
+    cp $1 "$dest_backup/$current_data-$name.bk" 2> "$current_data-$name.log" 
+    verify_if_returning_error "$current_data-$name.log"
+  else 
+    tar -czvf "$dest_backup/$current_data-$name.tar.gz" $arg 2>  "$current_data-$name.log"
+    verify_if_returning_error "$current_data-$name.log" 
+  fi
+  sudo chattr -i $arg
+else
+  echo "arquivo ou diretorio $arg não encontrado"
+  echo "insira um caminho valido para o backup"
+  exit 0
+fi
+ 
+
+
